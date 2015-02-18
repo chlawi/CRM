@@ -1,0 +1,24 @@
+{
+  "name": "L-TronInside",
+  "version": "0.0.0",
+  "authors": [
+    "Chet Wlliams <chet.williams@l-tron.com>"
+  ],
+  "description": "L-Tron intranet",
+  "license": "MIT",
+  "homepage": "index.html",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.3.11",
+    "bootstrap": "~3.3.2",
+    "angular-ui": "~0.4.0",
+    "angular-ui-router": "~0.2.13"
+  }
+}

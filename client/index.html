@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <title>L-Tron Inside</title>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/cerulean/bootstrap.min.css">
+  <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/cosmo/bootstrap.min.css">-->
+  <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/united/bootstrap.min.css">-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="site.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.11/angular.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.13/angular-ui-router.js"></script>
+</head>
+
+
+<body data-ng-app="l-tronInside">
+
+<section id="main" class="container-fluid" data-ui-view></section>
+
+<script>
+  (function () {
+    "use strict";
+    angular.module('l-tronInside', ['ui.router'])
+
+      .config(['$urlRouterProvider', '$stateProvider', function ($urlRouterProvider, $stateProvider) {
+
+        $urlRouterProvider.otherwise('/l-tronInside/welcome');
+
+        $stateProvider
+          .state('l-tronInside', {
+            abstract: true,
+            url: "/l-tronInside",
+            templateUrl: 'L-TronInside.tpl.html',
+            resolve: {
+              title: function () {
+                return 'L-Tron Inside again'
+              }
+            },
+            controller: function ($scope, title) {
+              $scope.title = title;
+              $scope.loginLabel = "Sign In";
+              console.log("Title: %s", title);
+            }
+          })
+          .state('l-tronInside.welcome', {
+            url: "/welcome",
+            template: '<h1>Welcome</h1>'
+          })
+          .state('l-tronInside.admin', {
+            url: "/admin",
+            templateUrl: 'l-tronInside.admin.tpl.html',
+            controller: function ($scope, $state) {
+              $state.go('l-tronInside.admin.roles');
+            }
+          })
+          .state('l-tronInside.admin.roles', {
+            url: "/roles",
+            templateUrl: 'l-tronInside.roles.tpl.html',
+            controller: function ($scope) {
+              $scope.roles = ['Administrator', 'Manager', 'Marketing Agent', 'Sales Agent', 'Customer Agent'];
+
+              $scope.addRole = function () {
+                $scope.roles.push($scope.newRole);
+                $scope.newRole = '';
+              }
+
+              $scope.deleteRole = function (index) {
+                $scope.roles.splice(index, 1);
+              }
+            }
+          })
+          .state('l-tronInside.admin.users', {
+            url: "/users",
+            templateUrl: 'l-tronInside.users.tpl.html',
+            controller: function ($scope) {
+              $scope.users = [
+                {
+                  email: 'chet.williams@l-tron.com',
+                  alias: ' ',
+                  role: 'Administrator'
+                }, {
+                  email: 'robert.derose@l-tron.com',
+                  alias: 'RAD ',
+                  role: 'Manager'
+                }, {
+                  email: 'jason.shanley@l-tron.com',
+                  alias: 'Shan Man',
+                  role: 'Marketing Agent'
+                }, {
+                  email: 'jason.culliton@l-tron.com',
+                  alias: ' ',
+                  role: 'Sales Agent'
+                }, {
+                  email: 'sally.schneider@l-tron.com',
+                  alias: ' ',
+                  role: 'Customer Service Agent'
+                }
+              ];
+              $scope.addUser = function () {
+                $scope.users.push({email: $scope.newEmail, alias: $scope.newAlias, role: $scope.newRole });
+
+                $scope.newEmail = '';
+                $scope.newAlias = '';
+              }
+
+              $scope.deleteUser = function (index) {
+                $scope.users.splice(index, 1);
+              }
+            }
+          })
+          .state('l-tronInside.theOffice', {
+            url: "/theOffice",
+            template: '<h1>The Office</h1><div ui-view></div> '
+          })
+          .state('l-tronInside.signIn', {
+            url: "/signIn",
+            templateUrl: 'l-tronInside.signIn.tpl.html'
+          })
+          .state('l-tronInside.signOut', {
+            url: "/signOut",
+            template: '<h1>Welcome</h1>'
+          })
+          .state('l-tronInside.about', {
+            url: "/about",
+            template: '<h1>About</h1><hr/><section class="container-fluid"><p>L-TRON Inside is the intranet site for ...</p></section>'
+          });
+      }])
+
+      .run(['$rootScope', '$templateCache', function ($rootScope, $templateCache) {
+
+        $rootScope.$on('$stateChangeStart',
+          function (event, toState, toParams, fromState, fromParams) {
+            console.log('state change start', event, toState, toParams, fromState, fromParams);
+          });
+
+        $rootScope.$on('$stateChangeSuccess',
+          function (event, toState, toParams, fromState, fromParams) {
+            console.log('state change success', event, toState, toParams, fromState, fromParams);
+          });
+
+
+        $rootScope.$on('$stateChangeError',
+          function (event, toState, toParams, fromState, fromParams, error) {
+            console.log('state change error', event, toState, toParams, fromState, error);
+          })
+
+        $rootScope.$on('$stateNotFound',
+          function (event, unfoundState, fromState, fromParams) {
+            console.log('state not found', event, unfoundState, fromState, fromParams);
+          });
+
+        console.log($templateCache.info());
+      }])
+  })();
+</script>
+
+<script type="text/ng-template" id="L-TronInside.tpl.html">
+  <header id="top">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                  data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" ui-sref='.welcome'>L-TRON Inside</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul ng-if="true" class="nav navbar-nav">
+            <li><a href="#">The Office</a></li>
+            <li><a href="#">Marketing</a></li>
+            <li><a href="#">Sales</a></li>
+            <li><a href="#">Customer Service</a></li>
+            <li><a ui-sref=".admin">Administration</a></li>
+          </ul>
+
+
+          <ul class="nav navbar-nav navbar-right">
+            <li ng-show='true'><a ui-sref='.signIn'>Sign in</a></li>
+            <li ng-show='true'><a ui-sref='.signOut'>Sign out</a></li>
+            <li class="divider-vertical"></li>
+            <li><a ui-sref='.about'>About</a></li>
+          </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container-fluid -->
+    </nav>
+  </header>
+
+  <!--<h1>{{ title }}</h1> -->
+  <div ui-view></div>
+
+</script>
+
+<script type="text/ng-template" id="l-tronInside.signIn.tpl.html">
+  <div class="container-fluid">
+
+    <section class="row">
+      <div class="container-fluid">
+        <aside class="col-md-6 col-md-offset-1  col-sm-8">
+          <div class="page-header">
+            <h2>Please sign in to your account</h2>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="row">
+      <div class="col-md-6 col-md-offset-2 col-sm-6 col-sm-offset-3">
+        <form class="form-horizontal">
+
+          <div class="form-group">
+            <label for="inputEmail3" class="col-sm-2 control-label">Email</label>
+
+            <div class="col-sm-10">
+              <div class="input-group margin-bottom-sm">
+                <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+                <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="inputPassword3" class="col-sm-2 control-label">Password</label>
+
+            <div class="col-sm-10">
+              <div class="input-group margin-bottom-sm">
+                <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+                <input type="password" class="form-control" id="inputPassword3" placeholder="Password">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox"> Remember me
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="l-tronInside.admin.tpl.html">
+  <div class="row">
+    <div class="col-md-2">
+      <ul text class="nav nav-pills nav-stacked">
+        <li><a ui-sref=".users">Users</a></li>
+        <li><a ui-sref=".roles">Roles</a></li>
+      </ul>
+    </div>
+    <div class="col-md-10" ui-view>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="l-tronInside.roles.tpl.html">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="page-header">
+        <h1>Roles
+          <small>Administrator</small>
+        </h1>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <form class="form-inline" ng-submit="addRole()">
+        <div class="form-group">
+          <input type="text" class="form-control" ng-model="newRole" placeholder="Enter new role">
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <row>
+        <div col-md-12>
+          <table class="table table-striped table-bordered table-hover table-condensed">
+            <thead>
+            <tr>
+              <th class="text-center"><h3>Role</h3></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="role in roles">
+              <td>
+                {{ role }}
+              </td>
+              <td>
+                <button ng-click="deleteRole($index)"><i class="fa fa-trash-o"></i></i></button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </row>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="l-tronInside.users.tpl.html">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="page-header">
+        <h1>Users
+          <small>Administrator</small>
+        </h1>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <form class="form-horizontal" ng-submit="addUser()">
+        <div class="form-group">
+          <label for="Email" class="col-sm-2 control-label">Email</label>
+
+          <div class="col-sm-10">
+            <input type="email" class="form-control" id="Email" ng-model="newEmail" placeholder="firstName.lastName@l-tron.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="Alias" class="col-sm-2 control-label">Alias</label>
+
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="Alias" ng-model="newAlias" placeholder="Optional">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="Role" class="col-sm-2 control-label">Role</label>
+
+          <div class="col-sm-10">
+            <select class="form-control" id="Role" ng-model="newRole">
+              <option>Select ...</option>
+              <option>Administrator</option>
+              <option>Manager</option>
+              <option>Marketing Agent</option>
+              <option>Sales Agent</option>
+              <option>Customer Service Agent</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">Add</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <div class="row">
+        <div col-md-12>
+          <table class="table table-bordered table-striped table-hover">
+            <thead>
+            <tr>
+              <th>Email</th>
+              <th>Alias</th>
+              <th>Role</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="user in users">
+              <td>
+                {{ user.email }}
+              </td>
+              <td>
+                {{ user.alias }}
+              </td>
+              <td>
+                {{ user.role }}
+              </td>
+              <td>
+                <button ng-click="deleteUser($index)"><i class="fa fa-trash-o"></i></i></button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "L-TronInside",
+  "version": "1.0.0",
+  "description": "L-Tron intranet",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Chet Williams",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^1.3.6",
+    "protractor": "^1.6.1"
+  }
+}
