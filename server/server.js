@@ -1,60 +1,70 @@
 /**
  * Created by chet.williams on 1/29/2015.
  */
-var express = require('express')
-var cors = require('cors')
-var bodyParser = require('body-parser')
-//var bodyParser = require('body-parser')
-var morgan = require('morgan')
+var express = require('express');
+var logger = require('morgan');
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var cors = require('cors');
+var path = require('path');
 
-var mongoskin = require('mongoskin')
+var mongoskin = require('mongoskin');
 
-var jwt = require('jsonwebtoken')
-var expressJwt = require('express-jwt')
+var crypto = require('crypto');
+var jwt = require('jsonwebtoken');
+var expressJwt = require('express-jwt');
+var jwtSecret = 'DotheRightThing';
 
-var crypto = require('crypto')
-var jwtSecret = 'DotheRightThing'
-
-var user = {
-  username: 'chet.williams',
-  password: 'secret'
-};
+var moment = require('moment');
 
 
-var app = express()
+var app = express();
 
-console.log(__dirname)
-
-app.use('/', express.static(__dirname + '/../client'))
-
-//app.use(expressJwt({secret: jwtSecret}).unless({path: ['/signIn']}))
-//app.use(expressJwt({secret: jwtSecret}));
+app.use(logger('dev'));
+app.use(bodyParser.json({}));
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(cookieParser());
 app.use((cors()));
 
-app.use(bodyParser.urlencoded({extended: false}))
-app.use(bodyParser.json())
-app.use(bodyParser.json({type: 'application/*+json'}))
+app.use('/', express.static(path.join(__dirname, "/../client")));
 
+app.use(function (req, res, next) {
+  console.log("IP Addresses: %s, Hostname: %s, path: %s, base: %s", req.ip, req.hostname, req.path, req.baseUrl);
+  return next()
+});
 
-app.use(morgan('dev'))
+app.use(expressJwt({secret: jwtSecret}).unless({path: ['/api/signIn']}));
 
-var db = mongoskin.db("mongodb://localhost:27017/l-tronInside")
+var db = mongoskin.db("mongodb://localhost:27017/l-tronInside", {safe: true});
 
-//app.post('/signIn', authenticate, function (req, res) {
+app.post('/api/signIn', function (req, res, next) {
+
+  var profile = {
+    firstName: "Chet",
+    alias: "fubar"
+  };
+
+  var expiration = moment().add(7, 'days').valueOf()
+
+  //var token = jwt.sign(profile, jwtSecret, expiration);
+  res.send({
+    expiration: expiration,
+    profile: profile
+  });
 //  var token = jwt.sign({
 //    usename: user.username
 //  }, jwtSecret)
 //  res.send({
 //    token: token,
-//    user: user
+//    profile: profile
 //  });
-//});
+//var expiration = moment().add(7, 'days').valueOf()
+});
 
 app.param('collectionName', function (req, res, next, collectionName) {
-  req.collection = db.collection(collectionName)
-  console.log(collectionName)
+  req.collection = db.collection(collectionName);
   return next()
-})
+});
 
 app.get('/api/:collectionName', function (req, res, next) {
   req.collection.find({}, {limit: 10, sort: [['_id', -1]]}).toArray(function (e, results) {
@@ -62,6 +72,14 @@ app.get('/api/:collectionName', function (req, res, next) {
     res.send(results)
   })
 })
+
+app.post('/api/:collectionName', function (req, res, next) {
+  req.collection.insert(req.body, {}, function (e, results) {
+    console.log(req.collection);
+    if (e) return next(e);
+    res.send(results)
+  })
+});
 
 app.post('/api/:collectionName/signIn', function (req, res, next) {
   req.collection.findOne({email: req.body.email}, function (err, result) {
@@ -114,11 +132,15 @@ app.post('/api/:collectionName/register', function (req, res, next) {
   })
 })
 
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500).json(err);
+});
+
 var server = app.listen(3000, function () {
-  var host = server.address().address
-  var port = server.address().port
+  var host = server.address().address;
+  var port = server.address().port;
   console.log('App listening at http://%s:%s', host, port)
-})
+});
 
 // UTIL FUNCTIONS
 function authenticate(req, res, next) {
