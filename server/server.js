@@ -38,27 +38,54 @@ app.use(expressJwt({secret: jwtSecret}).unless({path: ['/api/signIn']}));
 var db = mongoskin.db("mongodb://localhost:27017/l-tronInside", {safe: true});
 
 app.post('/api/signIn', function (req, res, next) {
+  try {
 
-  var profile = {
-    firstName: "Chet",
-    alias: "fubar"
-  };
+    if (!( req.body.email && req.body.password))  {
+      res.send(401, 'Invalid user name or password');
+    }
+    //else{
+    //  res.status(200).end();
+    //}
 
-  var expiration = moment().add(7, 'days').valueOf()
+    var credentials = {};
+    credentials = req.body;
+    db.collection('users').findOne({email: credentials.email}, function (err, result) {
+      if (err) {
+        console.log(err);
+        throw(err);
+      }
+      else if (result === null) {
+        res.status(401).end()
+      }
+      else {
+        var user = result;
 
-  //var token = jwt.sign(profile, jwtSecret, expiration);
-  res.send({
-    expiration: expiration,
-    profile: profile
-  });
-//  var token = jwt.sign({
-//    usename: user.username
-//  }, jwtSecret)
-//  res.send({
-//    token: token,
-//    profile: profile
-//  });
-//var expiration = moment().add(7, 'days').valueOf()
+        var hashedCode = crypto.createHmac('sha1', user.salt);
+        var hashedPassword = hashedCode.update(credentials.password).digest('hex');
+        if (user.password === hashedPassword) {
+          var expiration = moment().add(7, 'days').valueOf();
+          var token = jwt.sign(user.email, jwtSecret, expiration);
+
+          var profile = {
+            firstName: user.firstName,
+            role: user.role,
+            alias: user.alias
+          };
+
+          res.send({
+            token: token,
+            profile: profile
+          });
+        }
+        else {
+          res.status(401).end()
+        }
+      }
+    });
+  }
+  catch (err) {
+    return next(err);
+  }
 });
 
 app.param('collectionName', function (req, res, next, collectionName) {
@@ -71,7 +98,7 @@ app.get('/api/:collectionName', function (req, res, next) {
     if (e) return next(e)
     res.send(results)
   })
-})
+});
 
 app.post('/api/:collectionName', function (req, res, next) {
   req.collection.insert(req.body, {}, function (e, results) {
@@ -118,6 +145,8 @@ app.post('/api/:collectionName/register', function (req, res, next) {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     email: req.body.email,
+    role: req.body.role,
+    alias: req.body.alias,
     salt: salt,
     password: hashed_pwd
   }, function (e, results) {
