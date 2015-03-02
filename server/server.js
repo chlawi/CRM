@@ -27,23 +27,23 @@ app.use((cors()));
 
 app.use('/', express.static(path.join(__dirname, "/../client")));
 
-app.use(expressJwt({
-  secret: 'DotheRightThing',
-  credentialsRequired: true,
-  getToken: function fromHeaderOrQuerystring (req) {
-    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-      return req.headers.authorization.split(' ')[1];
-    } else if (req.query && req.query.token) {
-      return req.query.token;
-    }
-    return null;
-  }
-}).unless({path: ['/api/signIn']}));
+//app.use(expressJwt({
+//  secret: 'DotheRightThing',
+//  credentialsRequired: true,
+//  getToken: function fromHeaderOrQuerystring (req) {
+//    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+//      return req.headers.authorization.split(' ')[1];
+//    } else if (req.query && req.query.token) {
+//      return req.query.token;
+//    }
+//    return null;
+//  }
+//}).unless({path: ['/api/signIn']}));
 
 //app.use(expressJwt({secret: jwtSecret}).unless({path: ['/api/signIn','/api/register']}));
 
 app.use(function (req, res, next) {
-  console.log("IP Addresses: %s, Hostname: %s, path: %s, base: %s", req.ip, req.hostname, req.path, req.baseUrl, req.user);
+  console.log("IP Addresses: %s, Hostname: %s, path: %s, base: %s, user: %s", req.ip, req.hostname, req.path, req.baseUrl, req.user);
   return next()
 });
 
@@ -113,10 +113,7 @@ console.log("in api/register", req.user)
 
     console.log(' no error occurred');
     //console.log('result: ', result);
-    if (!(result && result.role === 'administrator')) {
-      res.status(403).send('user not authorized');
-    }
-    else{
+    if (result && result.role === 'administrator') {
       console.log(' user authorized');
       console.log(' pass db.collections');
       var salt = crypto.randomBytes(128).toString('base64');
@@ -142,6 +139,9 @@ console.log("in api/register", req.user)
           res.status(200).json(results)
         }
       })
+    }
+    else{
+      res.status(403).send('user not authorized');
     }
   });
 });
